@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chatapp.controller.MainChatController">
+    <left>
+        <ListView fx:id="friendList" />  <!-- Danh sách bạn bè/phòng chat -->
+    </left>
+    <center>
+        <VBox>
+            <ScrollPane fx:id="chatScrollPane">
+                <TextArea fx:id="chatArea" editable="false" />  <!-- Hiển thị tin nhắn -->
+            </ScrollPane>
+            <HBox>
+                <TextField fx:id="messageField" promptText="Nhập tin nhắn..." />
+                <Button text="Gửi" onAction="#sendMessage" />
+                <Button text="Gửi File" onAction="#sendFile" />
+                <Button text="Video Call" onAction="#startVideoCall" />
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

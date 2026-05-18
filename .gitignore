@@ -1,0 +1,31 @@
+# --- BỎ QUA FILE THỰC THI & BUILD CỦA JAVA ---
+**/target/
+**/build/
+**/out/
+
+# Giữ lại file Maven wrapper nếu có
+!.mvn/wrapper/maven-wrapper.jar
+
+# --- BỎ QUA CẤU HÌNH IDE (IntelliJ, Eclipse, VSCode) ---
+# IntelliJ
+**/.idea/
+**/*.iws
+**/*.iml
+**/*.ipr
+
+# Eclipse (Bao gồm cả thư mục .metadata trong ảnh của bạn)
+.metadata/
+**/.metadata/
+**/.settings/
+**/.classpath
+**/.project
+**/.factorypath
+**/.apt_generated
+**/.springBeans
+**/.sts4-cache
+
+# VS Code
+**/.vscode/
+
+# --- BỎ QUA FILE HỆ THỐNG MAC OS ---
+**/.DS_Store

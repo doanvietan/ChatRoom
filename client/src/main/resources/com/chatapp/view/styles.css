@@ -1,0 +1,203 @@
+/* ==================================================================================
+   1. CẤU HÌNH CHUNG & LOGIN/REGISTER (GIỮ NGUYÊN NHƯ YÊU CẦU)
+   ================================================================================== */
+.root {
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* --- Màn hình Đăng nhập & Đăng ký --- */
+.login-bg {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #e3f2fd);
+    -fx-padding: 30;
+}
+
+.heading-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1565C0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 3);
+}
+
+/* --- Input Fields Chung (Giữ style cũ cho Login) --- */
+.text-input {
+    -fx-background-color: white;
+    -fx-border-color: #B0BEC5;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 8;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+.text-input:focused {
+    -fx-border-color: #2196F3;
+    -fx-effect: dropshadow(three-pass-box, rgba(33,150,243,0.3), 5, 0, 0, 0);
+}
+
+/* ==================================================================================
+   2. MODERN CHAT UI (PHẦN NÂNG CẤP)
+   ================================================================================== */
+
+/* --- Tùy chỉnh thanh cuộn (Scrollbar) cho hiện đại --- */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8; /* Thanh cuộn mỏng */
+    -fx-pref-height: 8;
+}
+
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb {
+    -fx-background-color: #cfd8dc;
+    -fx-background-radius: 10em; /* Bo tròn hoàn toàn */
+}
+
+.scroll-bar:vertical .thumb:hover, .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #b0bec5;
+}
+
+/* Ẩn nút mũi tên trên thanh cuộn */
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+}
+
+/* --- Sidebar (Danh sách phòng/User) --- */
+.sidebar {
+    -fx-background-color: #f8f9fa; /* Màu xám rất nhạt, sạch sẽ */
+    -fx-border-color: transparent #e0e0e0 transparent transparent; /* Chỉ kẻ vạch bên phải */
+}
+
+/* ListView */
+.list-view {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 5;
+}
+
+/* Từng ô trong danh sách (List Cell) */
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #37474f;
+    -fx-padding: 8 10;
+    -fx-background-radius: 8; /* Bo góc cho từng item */
+    -fx-border-radius: 8;
+}
+
+/* Khi di chuột vào item */
+.list-cell:filled:hover {
+    -fx-background-color: #e3f2fd; /* Xanh nhạt */
+    -fx-cursor: hand;
+}
+
+/* Khi item được chọn */
+.list-cell:filled:selected {
+    -fx-background-color: #bbdefb;
+    -fx-text-fill: #0d47a1;
+    -fx-font-weight: bold;
+}
+
+/* Khi ListView mất focus (vẫn giữ màu chọn) */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: #bbdefb;
+}
+
+/* --- Khu vực Chat (Chat Area) --- */
+.chat-area {
+    /* TextArea mặc định của JavaFX rất khó style thành bong bóng chat (bubble).
+       Ta sẽ làm nó giống một trang giấy sạch sẽ */
+    -fx-background-color: white;
+    -fx-control-inner-background: white;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 10;
+    -fx-font-size: 15px;
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-highlight-fill: #b3e5fc; /* Màu khi bôi đen văn bản */
+    -fx-highlight-text-fill: black;
+}
+
+/* --- Buttons hiện đại --- */
+.button {
+    -fx-background-color: #eceff1;
+    -fx-text-fill: #455a64;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20; /* Bo tròn dạng viên thuốc (Pill shape) */
+    -fx-border-radius: 20;
+    -fx-cursor: hand;
+    -fx-padding: 8 20; /* Tăng padding ngang */
+    -fx-effect: null; /* Bỏ shadow mặc định xấu xí */
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.button:hover {
+    -fx-background-color: #cfd8dc;
+    -fx-scale-x: 1.02; /* Phóng to nhẹ khi hover */
+    -fx-scale-y: 1.02;
+}
+
+/* Nút Gửi (Primary) */
+.button-primary {
+    -fx-background-color: #2196F3; /* Material Blue */
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(33, 150, 243, 0.3), 5, 0, 0, 2);
+}
+
+.button-primary:hover {
+    -fx-background-color: #1976D2;
+}
+
+/* Nút Video Call / Secondary */
+.button-secondary {
+    -fx-background-color: #66bb6a; /* Pastel Green */
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(76, 175, 80, 0.3), 5, 0, 0, 2);
+}
+
+.button-secondary:hover {
+    -fx-background-color: #43a047;
+}
+
+/* Nút AI Chat (Màu tím) */
+/* Lưu ý: Trong FXML bạn có style inline, style inline sẽ ưu tiên hơn CSS này.
+   Nhưng đây là class hỗ trợ nếu bạn bỏ style inline */
+.button-ai {
+    -fx-background-color: #ab47bc;
+    -fx-text-fill: white;
+}
+.button-ai:hover {
+    -fx-background-color: #8e24aa;
+}
+
+/* --- Input nhập tin nhắn --- */
+/* Target cụ thể TextField nằm trong HBox của MainChat */
+.center .text-input {
+    -fx-background-radius: 20; /* Bo tròn input */
+    -fx-border-radius: 20;
+    -fx-border-color: #cfd8dc;
+    -fx-background-color: #fafafa;
+    -fx-padding: 10 15;
+}
+
+.center .text-input:focused {
+    -fx-background-color: white;
+    -fx-border-color: #2196F3;
+}
+
+/* --- Separator (Đường kẻ) --- */
+.separator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 0 1 0; /* Chỉ kẻ 1 đường mỏng */
+    -fx-border-color: #eceff1;
+    -fx-background-color: transparent;
+}
+
+/* --- Video Call View --- */
+.video-root {
+    -fx-background-color: #263238;
+}
+.video-view {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 5);
+}

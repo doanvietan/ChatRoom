@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.chatapp.controller.RegisterController"
+      alignment="CENTER" spacing="20"
+      prefWidth="400" prefHeight="500"
+      styleClass="login-bg" stylesheets="@styles.css">
+
+    <Label text="Chat App Register" styleClass="heading-label"/>
+
+    <VBox spacing="15" maxWidth="300">
+        <TextField fx:id="usernameField" promptText="Tên đăng nhập" prefHeight="40"/>
+        <PasswordField fx:id="passwordField" promptText="Mật khẩu" prefHeight="40"/>
+        <TextField fx:id="emailField" promptText="Email" prefHeight="40"/>
+    </VBox>
+
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Quay Lại" onAction="#backToLogin" styleClass="button" prefWidth="100"/>
+        <Button text="Đăng Ký Ngay" onAction="#register" styleClass="button, button-primary" prefWidth="150"/>
+    </HBox>
+</VBox>

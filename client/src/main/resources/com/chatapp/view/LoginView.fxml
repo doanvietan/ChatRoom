@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.chatapp.controller.LoginController"
+      alignment="CENTER" spacing="20"
+      prefWidth="400" prefHeight="500"
+      styleClass="login-bg" stylesheets="@styles.css">
+
+    <Label text="Chat App Login" styleClass="heading-label"/>
+
+    <VBox spacing="10" maxWidth="300">
+        <TextField fx:id="usernameField" promptText="Tên đăng nhập" prefHeight="40"/>
+        <PasswordField fx:id="passwordField" promptText="Mật khẩu" prefHeight="40"/>
+    </VBox>
+
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Đăng Nhập" onAction="#login" styleClass="button, button-primary" prefWidth="120" prefHeight="35"/>
+        <Button text="Đăng Ký" onAction="#register" styleClass="button, button-secondary" prefWidth="120" prefHeight="35"/>
+    </HBox>
+</VBox>

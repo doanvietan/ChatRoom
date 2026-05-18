@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.TextFlow?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.chatapp.controller.MainChatController"
+            prefHeight="700" prefWidth="1000"
+            stylesheets="@styles.css">
+    <left>
+        <VBox spacing="10" styleClass="sidebar" prefWidth="250" style="-fx-padding: 10;">
+            <Label text="Phòng Chat Của Bạn" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #555;"/>
+            <ListView fx:id="roomList" VBox.vgrow="ALWAYS"/>
+            <Separator/>
+            <Label text="Tất Cả Người Dùng"/>
+            <ListView fx:id="allUsersList" VBox.vgrow="ALWAYS"/>
+            <Separator/>
+            <Label text="Tất Cả Group"/>
+            <ListView fx:id="allRoomsList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: white;">
+
+            <!-- THAY THẾ ScrollPane CŨ BẰNG ĐOẠN NÀY -->
+            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                <content>
+                    <VBox fx:id="chatBox" spacing="10" style="-fx-padding: 10; -fx-background-color: white;"/>
+                </content>
+            </ScrollPane>
+
+            <!-- Thay thế đoạn HBox cũ bằng đoạn này -->
+            <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="50">
+                <Button text="📎 Gửi File" onAction="#sendFile" styleClass="button"/>
+                <!-- Nút giấu tin -->
+                <Button text="🕵️ Mật Thư (Ảnh)" onAction="#sendSecretImage" styleClass="button" style="-fx-background-color: #ff9800; -fx-text-fill: white;"/>
+                <!-- Nút Speech to text -->
+                <Button text="🎤 Nói" onAction="#speechToText" styleClass="button" style="-fx-background-color: #e91e63; -fx-text-fill: white;"/>
+
+                <TextField fx:id="messageField" promptText="Nhập tin nhắn..." HBox.hgrow="ALWAYS" prefHeight="40"/>
+                <Button text="Gửi" onAction="#sendMessage" styleClass="button, button-primary" prefHeight="40" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Video Call" onAction="#startVideoCall" styleClass="button, button-secondary"/>
+                <Button text="🤖 Chat với AI" onAction="#openAIChat" styleClass="button" style="-fx-background-color: #9C27B0; -fx-text-fill: white;"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>
