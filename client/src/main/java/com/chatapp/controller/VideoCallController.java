@@ -33,7 +33,7 @@ public class VideoCallController {
 
     // Đảm bảo IP này là IP LAN của máy chạy Server (Ví dụ: 172.16.246.102 hoặc 192.168.1.x)
     private String serverHost = "localhost";
-    private int serverPort = 200;
+    private int serverPort = 500;
     private OpenCVFrameGrabber grabber;
 
     public void setCallInfo(int roomId, int myUserId) {

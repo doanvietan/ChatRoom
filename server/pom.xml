@@ -34,6 +34,20 @@
             <version>1.43.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>23.0.1</version> </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>23.0.1</version> </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>23.0.1</version> </dependency>
         <!-- JSON.org for JSONObject (if needed, since Jackson is there, but for simplicity) -->
         <dependency>
             <groupId>org.json</groupId>

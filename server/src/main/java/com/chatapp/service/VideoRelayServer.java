@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VideoRelayServer implements Runnable {
-    private static final int UDP_PORT = 200;
+    private static final int UDP_PORT = 500;
     private static final int BUFFER_SIZE = 60000;
     private boolean running = true;
     private DatagramSocket socket;
