@@ -1,4 +1,5 @@
 package com.chatapp.service;
+import com.chatapp.model.dao.MessageDAO;
 import com.chatapp.model.dao.UserDAO;
 import com.chatapp.model.dao.ChatRoomDAO;
 import com.chatapp.model.entity.ChatRoom;
@@ -29,7 +30,7 @@ public class ClientHandler implements Runnable {
     private ChatRoomDAO roomDAO = new ChatRoomDAO();
     private ChatService chatService = new ChatService();
     private AuthService authService = new AuthService();
-
+    private MessageDAO messageDAO = new MessageDAO(); // Thêm dòng này
     private static final String UPLOAD_DIR = "server_files/";
 
     // Thêm khối static này để tự động tạo thư mục nếu chưa có
@@ -138,7 +139,10 @@ public class ClientHandler implements Runnable {
                             out.println("AI_RESPONSE:" + safeAnswer);
                         }).start();
                         break;
-
+                    case "DELETE_MESSAGE":
+                        // Client gửi: DELETE_MESSAGE:messageId:roomId
+                        handleDeleteMessage(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                        break;
                 }
             }
         } catch (IOException | SQLException e) {
@@ -167,6 +171,30 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void handleDeleteMessage(int messageId, int roomId) throws SQLException {
+        // 1. Cập nhật is_active = 0 trong cơ sở dữ liệu
+        boolean success = messageDAO.softDeleteMessage(messageId);
+
+        // 2. Nếu xoá thành công, thông báo cho các thành viên trong phòng (bao gồm cả người gửi)
+        if (success) {
+            String deleteNotify = "DELETE_NOTIFY:" + messageId + ":" + roomId;
+            String roomType = getRoomType(roomId);
+
+            if ("PRIVATE".equals(roomType) || "GROUP".equals(roomType)) {
+                List<Integer> members = roomDAO.getRoomMembers(roomId);
+                for (int memberId : members) {
+                    ClientHandler target = onlineUsers.get(memberId);
+                    if (target != null) {
+                        target.out.println(deleteNotify);
+                    }
+                }
+            } else if ("PUBLIC".equals(roomType)) {
+                for (ClientHandler handler : onlineUsers.values()) {
+                    handler.out.println(deleteNotify);
+                }
+            }
+        }
+    }
     private void handleFileDownload(String filename) {
         try {
             File file = new File(UPLOAD_DIR + filename);
@@ -281,12 +309,15 @@ public class ClientHandler implements Runnable {
         msg.setSenderId(senderId);
         msg.setContent(content);
         msg.setType(type);
-        chatService.sendMessage(msg);
-        // Lấy type room
-        String roomType = getRoomType(roomId); // Method phụ, implement dưới
-        String messageStr = "MESSAGE:" + roomId + ":" + senderId + ":" + content + ":" + type;
+        chatService.sendMessage(msg); // Sau lệnh này, msg đã có ID nhờ Bước 1
+
+        String roomType = getRoomType(roomId);
+
+        // CẬP NHẬT: Thêm msg.getId() vào chuỗi giao thức gửi đi
+        String messageStr = "MESSAGE:" + roomId + ":" + msg.getId() + ":" + senderId + ":" + content + ":" + type;
+
         if ("PRIVATE".equals(roomType)) {
-            // Unicast: gửi đến người kia
+            // Giữ nguyên logic unicast cũ...
             List<Integer> members = roomDAO.getRoomMembers(roomId);
             for (int memberId : members) {
                 if (memberId != senderId) {
@@ -297,7 +328,7 @@ public class ClientHandler implements Runnable {
                 }
             }
         } else if ("GROUP".equals(roomType)) {
-            // Multicast: gửi đến tất cả members
+            // Giữ nguyên logic multicast cũ...
             List<Integer> members = roomDAO.getRoomMembers(roomId);
             for (int memberId : members) {
                 ClientHandler target = onlineUsers.get(memberId);
@@ -306,7 +337,6 @@ public class ClientHandler implements Runnable {
                 }
             }
         } else if ("PUBLIC".equals(roomType)) {
-            // Broadcast: gửi đến tất cả online
             for (ClientHandler handler : onlineUsers.values()) {
                 handler.out.println(messageStr);
             }
@@ -330,10 +360,19 @@ public class ClientHandler implements Runnable {
         List<Message> history = chatService.getHistory(roomId);
         StringBuilder sb = new StringBuilder("HISTORY:");
         for (Message msg : history) {
-            // CẬP NHẬT: Thêm .append(msg.getType()) vào cuối
-            sb.append(msg.getSenderId()).append(":")
-                    .append(msg.getContent()).append(":")
-                    .append(msg.getType()).append(";");
+            String content = msg.getContent();
+            String type = msg.getType();
+
+            // NẾU TIN NHẮN ĐÃ BỊ THU HỒI: Giấu nội dung gốc ngay từ Server
+            if (msg.getIsActive() == 0) {
+                content = "Tin nhắn đã được thu hồi";
+                type = "RECALLED";
+            }
+
+            sb.append(msg.getId()).append(":")
+                    .append(msg.getSenderId()).append(":")
+                    .append(content).append(":")
+                    .append(type).append(";");
         }
         out.println(sb.toString());
     }

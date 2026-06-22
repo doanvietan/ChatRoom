@@ -10,7 +10,10 @@ public class Message {
     private String type; // 'TEXT', 'FILE', 'IMAGE', 'VIDEO'
     private String filePath; // Thêm trường này để khớp với DB
     private Timestamp timestamp;
+    private int isActive;
 
+    public int getIsActive() { return isActive; }
+    public void setIsActive(int isActive) { this.isActive = isActive; }
     public Message() {
     }
 

@@ -9,7 +9,10 @@ public class Message {
     private String content;
     private String type;
     private Timestamp timestamp;
+    private int isActive;
 
+    public int getIsActive() { return isActive; }
+    public void setIsActive(int isActive) { this.isActive = isActive; }
     // Constructors, getters, setters
     public Message() {}
     public Message(int roomId, int senderId, String content, String type) {

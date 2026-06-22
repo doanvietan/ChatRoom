@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -94,6 +95,8 @@ public class MainChatController {
         Platform.runLater(() -> {
             if (response.startsWith("MESSAGE:")) {
                 handleNewMessage(response.substring(8));
+            } else if (response.startsWith("DELETE_NOTIFY:")) { // CẬP NHẬT: Thêm case lắng nghe thông báo xoá tin
+                handleDeleteNotify(response.substring(14));
             } else if (response.startsWith("ROOMS:")) {
                 updateRoomList(response.substring(6));
             } else if (response.startsWith("ALL_USERS:")) {
@@ -129,10 +132,16 @@ public class MainChatController {
         });
     }
 
-    private void appendMessage(String username, String text, boolean isMine) {
+    // CẬP NHẬT: Nhận thêm biến messageId và sinh nút xoá 🗑️
+    private void appendMessage(int messageId, String username, String text, boolean isMine) {
         Platform.runLater(() -> {
-            HBox messageContainer = new HBox();
+            HBox messageContainer = new HBox(5);
             messageContainer.setMaxWidth(Double.MAX_VALUE);
+
+            // Gắn ID cho container để dễ tìm kiếm khi xoá thời gian thực
+            if (messageId != -1) {
+                messageContainer.setId("msg-" + messageId);
+            }
 
             VBox bubble = new VBox(2);
             bubble.setStyle("-fx-background-radius: 15; -fx-padding: 10; " +
@@ -150,20 +159,33 @@ public class MainChatController {
 
             if (isMine) {
                 messageContainer.setAlignment(Pos.CENTER_RIGHT);
+                // Nếu là tin nhắn có ID hợp lệ từ DB, thêm nút xoá bên cạnh trái bong bóng chat
+                if (messageId != -1) {
+                    Button deleteBtn = new Button("🗑️");
+                    deleteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #ff4d4d; -fx-cursor: hand; -fx-padding: 5;");
+                    deleteBtn.setOnAction(e -> clientSocket.sendMessage("DELETE_MESSAGE:" + messageId + ":" + currentRoomId));
+                    messageContainer.getChildren().add(deleteBtn);
+                }
+                messageContainer.getChildren().add(bubble);
             } else {
                 messageContainer.setAlignment(Pos.CENTER_LEFT);
+                messageContainer.getChildren().add(bubble);
             }
 
-            messageContainer.getChildren().add(bubble);
             chatBox.getChildren().add(messageContainer);
             scrollToBottom();
         });
     }
 
-    private void appendFileMessage(String username, String filename, boolean isMine) {
+    // CẬP NHẬT: Nhận thêm biến messageId và sinh nút xoá 🗑️ cho file
+    private void appendFileMessage(int messageId, String username, String filename, boolean isMine) {
         Platform.runLater(() -> {
-            HBox messageContainer = new HBox();
+            HBox messageContainer = new HBox(5);
             messageContainer.setMaxWidth(Double.MAX_VALUE);
+
+            if (messageId != -1) {
+                messageContainer.setId("msg-" + messageId);
+            }
 
             VBox bubble = new VBox(2);
             bubble.setStyle("-fx-background-radius: 15; -fx-padding: 10; " +
@@ -180,11 +202,18 @@ public class MainChatController {
 
             if (isMine) {
                 messageContainer.setAlignment(Pos.CENTER_RIGHT);
+                if (messageId != -1) {
+                    Button deleteBtn = new Button("🗑️");
+                    deleteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #ff4d4d; -fx-cursor: hand; -fx-padding: 5;");
+                    deleteBtn.setOnAction(e -> clientSocket.sendMessage("DELETE_MESSAGE:" + messageId + ":" + currentRoomId));
+                    messageContainer.getChildren().add(deleteBtn);
+                }
+                messageContainer.getChildren().add(bubble);
             } else {
                 messageContainer.setAlignment(Pos.CENTER_LEFT);
+                messageContainer.getChildren().add(bubble);
             }
 
-            messageContainer.getChildren().add(bubble);
             chatBox.getChildren().add(messageContainer);
             scrollToBottom();
         });
@@ -227,23 +256,25 @@ public class MainChatController {
 
     // =================================================================
 
+    // CẬP NHẬT: Tách thêm chuỗi chứa messageId truyền từ Server về
     private void handleNewMessage(String messageData) {
         try {
-            String[] parts = messageData.split(":", 4);
+            String[] parts = messageData.split(":", 5); // Cấu trúc mới: roomId:messageId:senderId:content:type
             int roomId = Integer.parseInt(parts[0]);
 
             if (roomId == currentRoomId && currentRoomId != -1) {
-                int senderId = Integer.parseInt(parts[1]);
+                int messageId = Integer.parseInt(parts[1]);
+                int senderId = Integer.parseInt(parts[2]);
                 if (senderId == clientSocket.getCurrentUserId()) return;
 
                 String username = idToUserMap.getOrDefault(senderId, "User " + senderId);
-                String msgContent = parts.length > 2 ? parts[2] : "";
-                String type = parts.length > 3 ? parts[3] : "TEXT";
+                String msgContent = parts.length > 3 ? parts[3] : "";
+                String type = parts.length > 4 ? parts[4] : "TEXT";
 
                 if ("FILE".equals(type)) {
-                    appendFileMessage(username, msgContent, false);
+                    appendFileMessage(messageId, username, msgContent, false);
                 } else {
-                    appendMessage(username, msgContent, false);
+                    appendMessage(messageId, username, msgContent, false);
                 }
             }
         } catch (NumberFormatException e) {
@@ -251,28 +282,71 @@ public class MainChatController {
         }
     }
 
+    // CẬP NHẬT: Tách thêm chuỗi chứa messageId từ lịch sử chat
     private void updateHistory(String historyStr) {
         String[] msgs = historyStr.split(";");
         clearChat();
         for (String msg : msgs) {
             if (!msg.isEmpty()) {
                 try {
-                    String[] parts = msg.split(":", 3);
-                    int senderId = Integer.parseInt(parts[0]);
+                    String[] parts = msg.split(":", 4);
+                    int messageId = Integer.parseInt(parts[0]);
+                    int senderId = Integer.parseInt(parts[1]);
                     boolean isMine = (senderId == clientSocket.getCurrentUserId());
                     String username = idToUserMap.getOrDefault(senderId, "User " + senderId);
-                    String msgContent = parts.length > 1 ? parts[1] : "";
-                    String type = parts.length > 2 ? parts[2] : "TEXT";
+                    String msgContent = parts.length > 2 ? parts[2] : "";
+                    String type = parts.length > 3 ? parts[3] : "TEXT";
 
-                    if ("FILE".equals(type)) {
-                        appendFileMessage(username, msgContent, isMine);
+                    // THAY THẾ HOẶC BỔ SUNG ĐOẠN ĐIỀU KIỆN NÀY
+                    if ("RECALLED".equals(type)) {
+                        appendRecalledMessage(messageId, username, isMine);
+                    } else if ("FILE".equals(type)) {
+                        appendFileMessage(messageId, username, msgContent, isMine);
                     } else {
-                        appendMessage(username, msgContent, isMine);
+                        appendMessage(messageId, username, msgContent, isMine);
                     }
                 } catch (NumberFormatException e) {
                     System.err.println("Error parsing history: " + e.getMessage());
                 }
             }
+        }
+    }
+    // CẬP NHẬT: Thêm phương thức xử lý sự kiện bóc tách Node khỏi màn hình khi nhận được lệnh thông báo xoá
+    private void handleDeleteNotify(String data) {
+        try {
+            String[] parts = data.split(":");
+            int messageId = Integer.parseInt(parts[0]);
+            int roomId = Integer.parseInt(parts[1]);
+
+            if (roomId == currentRoomId) {
+                Node nodeToUpdate = chatBox.lookup("#msg-" + messageId);
+                if (nodeToUpdate instanceof HBox) {
+                    HBox container = (HBox) nodeToUpdate;
+
+                    // 1. Xoá nút bấm 🗑️ ngay lập tức để không cho bấm vô định lần nữa
+                    container.getChildren().removeIf(node -> node instanceof Button);
+
+                    // 2. Tìm khối VBox (bubble) chứa chất liệu chữ để thay đổi giao diện
+                    VBox bubble = (VBox) container.getChildren().stream()
+                            .filter(node -> node instanceof VBox)
+                            .findFirst().orElse(null);
+
+                    if (bubble != null) {
+                        // Cập nhật lại Label tin nhắn (phần tử thứ 2 nằm trong VBox bubble)
+                        if (bubble.getChildren().size() >= 2 && bubble.getChildren().get(1) instanceof Label) {
+                            Label msgLabel = (Label) bubble.getChildren().get(1);
+                            msgLabel.setText("Tin nhắn đã được thu hồi");
+                            msgLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #a0a0a0; -fx-font-style: italic;");
+
+                            // Đổi màu nền bong bóng thành xám nhạt thu hồi
+                            bubble.setStyle("-fx-background-radius: 15; -fx-padding: 10; -fx-background-color: #f0f0f0; -fx-border-color: #e0e0e0; -fx-border-radius: 15;");
+                        }
+                    }
+                    scrollToBottom();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi xử lý UI thu hồi tin nhắn: " + e.getMessage());
         }
     }
 
@@ -287,8 +361,8 @@ public class MainChatController {
         }
 
         String currentUsername = idToUserMap.getOrDefault(clientSocket.getCurrentUserId(), "Bạn");
-        appendMessage(currentUsername, msg, true);
-
+        // Tin nhắn tự gửi chưa có ID ngay lập tức nên tạm thời truyền vào -1 (Sẽ có nút xoá ngay khi bạn reload phòng hoặc mở lại history)
+        appendMessage(-1, currentUsername, msg, true);
         clientSocket.sendMessage("SEND_MESSAGE:" + currentRoomId + ":" + msg + ":TEXT");
         messageField.clear();
     }
@@ -310,7 +384,7 @@ public class MainChatController {
                 base64Data = base64Data.replace("\n", "").replace("\r", "");
 
                 clientSocket.sendMessage("UPLOAD_FILE:" + currentRoomId + ":" + file.getName() + ":" + base64Data);
-                appendFileMessage("Bạn", file.getName(), true);
+                appendFileMessage(-1, "Bạn", file.getName(), true);
 
             } catch (IOException e) {
                 showAlert("Lỗi", "Không thể đọc file để gửi.");
@@ -627,7 +701,7 @@ public class MainChatController {
 
             clientSocket.sendMessage("UPLOAD_FILE:" + currentRoomId + ":" + stegoImage.getName() + ":" + base64Data);
 
-            appendFileMessage("Bạn", stegoImage.getName() + " (Có Mật thư)", true);
+            appendFileMessage(-1, "Bạn", stegoImage.getName() + " (Có Mật thư)", true);
 
             stegoImage.delete();
 
@@ -637,6 +711,37 @@ public class MainChatController {
         }
     }
 
+    private void appendRecalledMessage(int messageId, String username, boolean isMine) {
+        Platform.runLater(() -> {
+            HBox messageContainer = new HBox();
+            messageContainer.setMaxWidth(Double.MAX_VALUE);
+            if (messageId != -1) {
+                messageContainer.setId("msg-" + messageId);
+            }
+
+            VBox bubble = new VBox(2);
+            // Style bong bóng màu xám nhạt nhã nhặn cho tin nhắn thu hồi
+            bubble.setStyle("-fx-background-radius: 15; -fx-padding: 10; -fx-background-color: #f0f0f0; -fx-border-color: #e0e0e0; -fx-border-radius: 15;");
+
+            Label senderName = new Label(isMine ? "Bạn" : username);
+            senderName.setStyle("-fx-font-size: 10px; -fx-text-fill: #888888;");
+
+            Label messageLabel = new Label("Tin nhắn đã được thu hồi");
+            messageLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #a0a0a0; -fx-font-style: italic;");
+
+            bubble.getChildren().addAll(senderName, messageLabel);
+
+            if (isMine) {
+                messageContainer.setAlignment(Pos.CENTER_RIGHT);
+            } else {
+                messageContainer.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            messageContainer.getChildren().add(bubble);
+            chatBox.getChildren().add(messageContainer);
+            scrollToBottom();
+        });
+    }
     private void handleIncomingFile(String data) {
         String[] parts = data.split(":", 2);
         if (parts.length < 2) return;
