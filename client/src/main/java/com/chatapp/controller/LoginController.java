@@ -22,7 +22,7 @@ public class LoginController {
     @FXML
     public void initialize() {
         try {
-            clientSocket = new ClientSocket("localhost", 100);
+            clientSocket = new ClientSocket("localhost", 12345);
             System.out.println("Kết nối socket thành công.");
         } catch (IOException e) {
             showAlert("Lỗi kết nối", "Không thể kết nối đến server.");

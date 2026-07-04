@@ -13,13 +13,20 @@ public class AIChatController {
     @FXML
     private TextField aiInputParams;
     @FXML
-    private Button sendBtn; // Thêm nút gửi vào controller để khóa lại khi đang gõ
+    private Button sendBtn;
 
     private ClientSocket clientSocket;
 
+    // Cờ kiểm soát luồng gõ chữ
+    private volatile boolean isTyping = false;
+
     @FXML
     public void initialize() {
-        Platform.runLater(() -> aiInputParams.requestFocus());
+        Platform.runLater(() -> {
+            aiInputParams.requestFocus();
+            // Lời chào hiển thị ngay khi vừa mở form
+            addAIResponse("Xin chào! Mình là Trợ lý ảo Gemini. Mình có thể giúp gì cho bạn hôm nay?");
+        });
     }
 
     public void setClientSocket(ClientSocket clientSocket) {
@@ -33,49 +40,59 @@ public class AIChatController {
         });
     }
 
-    /**
-     * ✅ CẬP NHẬT MỚI: Hiệu ứng gõ chữ từng ký tự
-     */
     public void addAIResponse(String message) {
         String formatContent = message.replace("\\n", "\n").trim();
 
-        // Chạy trên luồng nền để không làm đơ giao diện
         new Thread(() -> {
+            // Bật cờ trạng thái đang gõ
+            isTyping = true;
 
-            // 1. Hiển thị tiêu đề trước
             Platform.runLater(() -> {
-                aiChatArea.appendText("\n🤖 GEMINI:\n");
-                // Khóa ô nhập liệu để tránh spam khi AI đang trả lời (tuỳ chọn)
+                aiChatArea.appendText("🤖 GEMINI: ");
+
+                // Khóa ô text nhưng KHÔNG khóa nút bấm để user có thể bấm Dừng
                 aiInputParams.setDisable(true);
-                if(sendBtn != null) sendBtn.setDisable(true);
+
+                // Biến nút Gửi thành nút Dừng (Màu đỏ)
+                if (sendBtn != null) {
+                    sendBtn.setText("Dừng");
+                    sendBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 20;");
+                }
             });
 
-            // 2. Vòng lặp gõ từng chữ
             try {
                 for (int i = 0; i < formatContent.length(); i++) {
-                    char c = formatContent.charAt(i);
+                    // Nếu user bấm dừng -> Ngắt vòng lặp ngay lập tức
+                    if (!isTyping) break;
 
-                    // Cập nhật UI (phải dùng Platform.runLater)
+                    char c = formatContent.charAt(i);
                     Platform.runLater(() -> {
                         aiChatArea.appendText(String.valueOf(c));
                         scrollToBottom();
                     });
 
-                    // Tốc độ gõ: 10ms - 30ms là đẹp nhất
-                    // Nếu văn bản dài, gõ nhanh (10ms), ngắn thì chậm (30ms)
-                    Thread.sleep(20);
+                    Thread.sleep(20); // Tốc độ gõ
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            // 3. Kết thúc và mở khóa nhập liệu
+            // Hoàn tất hoặc bị ngắt -> Khôi phục lại giao diện
             Platform.runLater(() -> {
-                aiChatArea.appendText("\n__________________________________________________\n");
+                if (!isTyping) {
+                    aiChatArea.appendText(" ... [Đã dừng]");
+                }
+                aiChatArea.appendText("");
                 scrollToBottom();
+
+                // Tắt cờ, mở khóa ô nhập, đổi lại nút Gửi (Màu xanh)
+                isTyping = false;
                 aiInputParams.setDisable(false);
-                if(sendBtn != null) sendBtn.setDisable(false);
-                aiInputParams.requestFocus(); // Focus lại để chat tiếp
+                if (sendBtn != null) {
+                    sendBtn.setText("Gửi");
+                    sendBtn.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 20;");
+                }
+                aiInputParams.requestFocus();
             });
 
         }).start();
@@ -83,6 +100,13 @@ public class AIChatController {
 
     @FXML
     private void sendMessageToAI() {
+        // Nếu AI đang gõ mà user bấm nút này -> Dừng việc gõ lại
+        if (isTyping) {
+            isTyping = false;
+            return;
+        }
+
+        // Logic gửi tin nhắn bình thường
         String msg = aiInputParams.getText().trim();
         if (msg.isEmpty()) return;
 

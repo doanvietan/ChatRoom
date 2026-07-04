@@ -39,7 +39,7 @@
                     <Font size="14.0" />
                 </font>
             </TextField>
-            <Button mnemonicParsing="false" onAction="#sendMessageToAI" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 20;" text="Gửi">
+            <Button fx:id="sendBtn" mnemonicParsing="false" onAction="#sendMessageToAI" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 20;" text="Gửi">
                 <font>
                     <Font name="System Bold" size="14.0" />
                 </font>

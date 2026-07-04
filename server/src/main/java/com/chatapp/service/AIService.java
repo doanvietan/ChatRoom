@@ -13,16 +13,21 @@ public class AIService {
 
     public String getAIResponse(String query) {
         try {
+            // Khởi tạo URL gốc
             GenericUrl url = new GenericUrl(Config.GEMINI_API_URL);
+            // Gắn API Key thông qua tham số query một cách an toàn để tránh lỗi encode dấu "?"
+            url.put("key", Config.API_KEY);
 
+            // --- Giữ nguyên toàn bộ cấu trúc JSON chuẩn bạn vừa sửa ---
             JSONObject textPart = new JSONObject();
             textPart.put("text", query);
 
-            JSONObject parts = new JSONObject();
-            parts.put("parts", new JSONArray().put(textPart));
+            JSONObject contentObj = new JSONObject();
+            contentObj.put("role", "user");
+            contentObj.put("parts", new JSONArray().put(textPart));
 
             JSONObject requestBody = new JSONObject();
-            requestBody.put("contents", new JSONArray().put(parts));
+            requestBody.put("contents", new JSONArray().put(contentObj));
 
             HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory();
 
@@ -47,7 +52,9 @@ public class AIService {
             }
 
         } catch (HttpResponseException e) {
-            // --- XỬ LÝ LỖI HTTP CỤ THỂ ---
+            // IN CHI TIẾT LỖI RA CONSOLE: Dòng này cực kỳ quan trọng để debug xem Google chê điểm nào
+            System.err.println("Chi tiết lỗi từ Google Server: " + e.getContent());
+
             if (e.getStatusCode() == 429) {
                 return "AI đang quá tải (Too Many Requests). Vui lòng đợi 1 phút rồi thử lại.";
             } else if (e.getStatusCode() == 404) {
